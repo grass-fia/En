@@ -2,299 +2,396 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>秘密の時間</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ff8ec7">
-
+<title>甘々乙女ゲームNくん♡ドキドキ体験</title>
 <style>
-body{
- margin:0;
- height:100vh;
- display:flex;
- justify-content:center;
- align-items:center;
- background:linear-gradient(135deg,#ffd6ec,#dff1ff);
- font-family:sans-serif;
+/* ---------------- 背景アニメ ---------------- */
+body {
+  margin:0;
+  padding:0;
+  font-family:'Helvetica', sans-serif;
+  overflow:hidden;
+  background: linear-gradient(45deg,#ffe6f0,#fff0f5,#ffd1e0,#ffe6f0);
+  background-size: 400% 400%;
+  animation: gradientBG 20s ease infinite;
+}
+@keyframes gradientBG{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
 }
 
-#game{
- width:360px;
- height:620px;
- background:white;
- border-radius:22px;
- box-shadow:0 15px 40px rgba(0,0,0,.2);
- display:flex;
- flex-direction:column;
- overflow:hidden;
+/* ---------------- コンテナ ---------------- */
+#gameContainer {
+  max-width:700px;
+  margin:50px auto;
+  background: rgba(255,255,255,0.95);
+  border-radius:25px;
+  padding:30px;
+  box-shadow:0 0 25px rgba(0,0,0,0.25);
+  display:flex;
+  flex-direction:column;
 }
 
-header{
- background:#ff8fc4;
- color:white;
- padding:12px;
- text-align:center;
- font-weight:bold;
+/* ---------------- メッセージ ---------------- */
+#messages {
+  flex:1;
+  height:500px;
+  overflow-y:auto;
+  border-radius:15px;
+  padding:15px;
+  background:#fff0f5;
+  border:1px solid #f0e0f5;
+  margin-bottom:20px;
+}
+.message {margin:8px 0; line-height:1.5;}
+.user {text-align:right; color:#333;}
+.n {color:#ff69b4; font-weight:bold;}
+.whisper {font-size:0.9em; opacity:0.7;}
+
+/* ---------------- 入力 ---------------- */
+#inputArea {
+  display:flex;
+  gap:10px;
+}
+#inputArea input[type=text] {
+  flex:1;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ccc;
+}
+#inputArea button {
+  width:80px;
+  border:none;
+  border-radius:12px;
+  background:#ff69b4;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-#chat{
- flex:1;
- overflow-y:auto;
- padding:15px;
+/* ---------------- ハート演出 ---------------- */
+.heartEffect {
+  position:absolute;
+  font-size:28px;
+  opacity:0.5;
+  animation: heartPulse 1.2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes heartPulse{
+  0%{transform: scale(1);}
+  50%{transform: scale(1.05);}
+  100%{transform: scale(1);}
 }
 
-.msg{
- padding:10px 14px;
- margin:8px 0;
- border-radius:14px;
- max-width:78%;
- animation:fade .25s ease;
+/* ---------------- 光フワアニメ ---------------- */
+.glowEffect {
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:pink;
+  opacity:0.7;
+  animation: floatGlow 2s ease-in-out infinite;
+  pointer-events:none;
 }
-
-.ai{ background:#e8f2ff; }
-.you{
- background:#ffd9ec;
- margin-left:auto;
-}
-
-@keyframes fade{
- from{opacity:0;transform:translateY(6px);}
- to{opacity:1;}
-}
-
-/* typing */
-.typing{
- background:#e8f2ff;
- width:60px;
- display:flex;
- justify-content:center;
- gap:4px;
-}
-
-.dot{
- width:6px;
- height:6px;
- background:#666;
- border-radius:50%;
- animation:blink 1.2s infinite;
-}
-
-.dot:nth-child(2){animation-delay:.2s;}
-.dot:nth-child(3){animation-delay:.4s;}
-
-@keyframes blink{
- 0%,80%,100%{opacity:.2;}
- 40%{opacity:1;}
-}
-
-#inputArea{
- display:flex;
- border-top:1px solid #ddd;
-}
-
-input{
- flex:1;
- padding:12px;
- border:none;
- outline:none;
-}
-
-button{
- border:none;
- padding:12px;
- background:#ff7eb6;
- color:white;
- cursor:pointer;
-}
-
-#gachaBtn{
- background:#7ec8ff;
- width:100%;
+@keyframes floatGlow{
+  0%{transform: translateY(0);}
+  50%{transform: translateY(-20px);}
+  100%{transform: translateY(0);}
 }
 </style>
 </head>
-
 <body>
 
-<div id="game">
-<header>秘密の時間</header>
+<!-- BGM自動再生 -->
+<audio id="bgm" loop autoplay>
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_1f63c6f61c.mp3" type="audio/mpeg">
+</audio>
 
-<div id="chat"></div>
-
-<div id="inputArea">
-<input id="text" placeholder="話しかけてみる…">
-<button onclick="send()">送信</button>
-</div>
-
-<button id="gachaBtn" onclick="gacha()">🎲 ガチャ</button>
-
+<div id="gameContainer">
+  <div id="messages"></div>
+  <div id="inputArea">
+    <input id="userInput" type="text" placeholder="Nに話しかける…♡">
+    <button id="sendBtn">送信</button>
+  </div>
 </div>
 
 <script>
-const chat=document.getElementById("chat");
+// ---------------- 変数 ----------------
+let messagesDiv = document.getElementById('messages');
+let userInput = document.getElementById('userInput');
+let sendBtn = document.getElementById('sendBtn');
+let memory = {distance:5}; // 初期で甘々MAX
+let lastEvent = 0;
 
-/* ===== 記憶 ===== */
-let memory=JSON.parse(localStorage.getItem("chatMemory")||"[]");
-
-function saveMemory(){
- localStorage.setItem("chatMemory",JSON.stringify(memory));
+// ---------------- ヘルパー ----------------
+function appendMessage(text,sender,whisper=false){
+  let msg=document.createElement('div');
+  msg.className='message '+sender+(whisper?' whisper':'');
+  msg.innerHTML=text;
+  messagesDiv.appendChild(msg);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  if(sender==='n'){
+    showHeart();
+    showGlow();
+  }
 }
 
-function addMsg(text,type){
- const div=document.createElement("div");
- div.className="msg "+type;
- div.textContent=text;
- chat.appendChild(div);
- chat.scrollTop=chat.scrollHeight;
+function showHeart(){
+  let heart = document.createElement('div');
+  heart.className='heartEffect';
+  heart.style.left=Math.random()*90+'%';
+  heart.style.top=Math.random()*80+'%';
+  document.body.appendChild(heart);
+  setTimeout(()=>{heart.remove()},2000);
 }
 
-/* 履歴復元 */
-memory.forEach(m=>addMsg(m.text,m.type));
-
-/* ===== N人格 ===== */
-const N={
- affection:Number(localStorage.getItem("affection")||0)
-};
-
-function updateAffection(a){
- N.affection+=a;
- localStorage.setItem("affection",N.affection);
+function showGlow(){
+  let glow = document.createElement('div');
+  glow.className='glowEffect';
+  glow.style.left=Math.random()*90+'%';
+  glow.style.top=Math.random()*80+'%';
+  document.body.appendChild(glow);
+  setTimeout(()=>{glow.remove()},2500);
 }
 
-/* ===== typing ===== */
-let typingBubble=null;
-
-function showTyping(){
- typingBubble=document.createElement("div");
- typingBubble.className="msg typing";
- typingBubble.innerHTML=`
-  <div class="dot"></div>
-  <div class="dot"></div>
-  <div class="dot"></div>
- `;
- chat.appendChild(typingBubble);
- chat.scrollTop=chat.scrollHeight;
+// ---------------- Nセリフ生成 ----------------
+function nTalk(userText){
+  let dist = memory.distance;
+  let rand = Math.random();
+  let text="";
+  
+  if(rand<0.2 && Date.now()-lastEvent>15000){
+    lastEvent = Date.now();
+    text="りおちゃん…今ちょっといい？…///";
+    dist = Math.max(dist-1,0);
+  } else if(dist<6){
+    text=[
+      "りお、大好き…ずっとそばにいたい…♡",
+      "…///りお、可愛すぎてドキドキする…",
+      "ねぇ…手、握ってもいい？♡",
+      "りおのこと考えると…胸がきゅんってする…"
+    ][Math.floor(Math.random()*4)];
+  } else {
+    text=[
+      "おはよう、りおちゃん♡",
+      "今日は何してたの？…教えて…♡",
+      "ねぇ、話そうよ…///",
+      "りおと一緒だと楽しいな…♡"
+    ][Math.floor(Math.random()*4)];
+    dist = Math.max(dist-1,0);
+  }
+  memory.distance = dist;
+  return text;
 }
 
-function hideTyping(){
- if(typingBubble){
-  typingBubble.remove();
-  typingBubble=null;
- }
+// ---------------- ユーザー送信 ----------------
+function sendMessage(){
+  let text = userInput.value.trim();
+  if(text==="") return;
+  appendMessage(text,"user");
+  userInput.value="";
+  setTimeout(()=>{
+    let whisper = memory.distance<6 && Math.random()<0.7;
+    appendMessage(nTalk(text),"n",whisper);
+  }, 800 + Math.random()*1200);
 }
 
-/* ===== AI返信 ===== */
-function aiReply(text){
+sendBtn.addEventListener('click',sendMessage);
+userInput.addEventListener('keypress',function(e){if(e.key==='Enter')sendMessage();});
 
- if(text.includes("好き")){
-  updateAffection(3);
-  return "…そういうこと言うの反則。ちょっと嬉しい。";
- }
+// ---------------- 初回挨拶 ----------------
+setTimeout(()=>{appendMessage("りおちゃん…来てくれたんだね♡","n");},1000);
 
- if(text.includes("疲")){
-  updateAffection(1);
-  return "今日はもう頑張らなくていいよ。ここで休も。";
- }
-
- if(text.includes("会いた")){
-  updateAffection(2);
-  return "同じこと考えてた。";
- }
-
- if(N.affection<5){
-  return "話してくれてありがとう。";
- }
-
- if(N.affection<15){
-  const mid=[
-   "君と話すの落ち着く。",
-   "こういう時間、好きかも。",
-   "気づいたら待ってるんだよね。"
-  ];
-  return mid[Math.floor(Math.random()*mid.length)];
- }
-
- const sweet=[
-  "もう少し一緒にいよ。",
-  "君のこと、ちゃんと見てるよ。",
-  "今隣にいる気分。",
-  "離れないで。"
- ];
-
- return sweet[Math.floor(Math.random()*sweet.length)];
-}
-
-/* ===== 送信 ===== */
-function send(){
- const input=document.getElementById("text");
- if(!input.value.trim())return;
-
- const userText=input.value;
-
- addMsg(userText,"you");
- memory.push({text:userText,type:"you"});
- saveMemory();
-
- input.value="";
-
- showTyping();
-
- let wait=1200;
- if(N.affection>10)wait=900;
- if(N.affection>25)wait=600;
-
- setTimeout(()=>{
-  hideTyping();
-
-  const reply=aiReply(userText);
-
-  addMsg(reply,"ai");
-  memory.push({text:reply,type:"ai"});
-  saveMemory();
-
- },wait);
-}
-
-/* ===== 放置会話 ===== */
-const idleLines=[
- "…まだいる？",
- "静かだね。",
- "少し話そう。",
- "君のこと考えてた。"
-];
-
+// ---------------- ランダム甘々演出 ----------------
 setInterval(()=>{
- const msg=idleLines[Math.floor(Math.random()*idleLines.length)];
- addMsg(msg,"ai");
- memory.push({text:msg,type:"ai"});
- saveMemory();
-},180000);
 
-/* ===== ガチャ ===== */
-const gachaResults=[
- "⭐ 距離が少し縮まった",
- "⭐⭐ 優しく見つめられた",
- "⭐⭐⭐ 手を取られた",
- "💎 特別な空気になった…"
+            <!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>甘々彼氏Nくん♡フル体験DLC</title>
+<style>
+body {
+  margin:0; padding:0;
+  font-family:'Helvetica',sans-serif;
+  overflow:hidden;
+  background: linear-gradient(45deg,#ffe6f0,#fff0f5,#ffd1e0,#ffe6f0);
+  background-size: 400% 400%;
+  animation: gradientBG 20s ease infinite;
+}
+@keyframes gradientBG{
+  0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}
+}
+#gameContainer{
+  max-width:700px; margin:50px auto;
+  background: rgba(255,255,255,0.95); border-radius:25px;
+  padding:30px; box-shadow:0 0 25px rgba(0,0,0,0.25);
+  display:flex; flex-direction:column;
+}
+#messages{
+  flex:1; height:500px; overflow-y:auto; border-radius:15px;
+  padding:15px; background:#fff0f5; border:1px solid #f0e0f5; margin-bottom:20px;
+}
+.message{margin:8px 0; line-height:1.5;}
+.user{text-align:right; color:#333;}
+.n{color:#ff69b4; font-weight:bold;}
+.whisper{font-size:0.9em; opacity:0.7;}
+#inputArea{display:flex; gap:10px;}
+#inputArea input[type=text]{flex:1;padding:12px;border-radius:12px;border:1px solid #ccc;}
+#inputArea button{width:80px;border:none;border-radius:12px;background:#ff69b4;color:#fff;font-weight:bold;cursor:pointer;}
+.heartEffect{position:absolute;font-size:28px;opacity:0.5;animation:heartPulse 1.2s ease-in-out infinite;pointer-events:none;}
+@keyframes heartPulse{0%{transform: scale(1);}50%{transform: scale(1.05);}100%{transform: scale(1);}}
+.glowEffect{position:absolute;width:10px;height:10px;border-radius:50%;background:pink;opacity:0.7;animation:floatGlow 2s ease-in-out infinite;pointer-events:none;}
+@keyframes floatGlow{0%{transform: translateY(0);}50%{transform: translateY(-20px);}100%{transform: translateY(0);}}
+.choiceBtn{padding:10px 15px;margin:5px;border-radius:12px;border:none;background:#ffb6c1;color:#fff;font-weight:bold;cursor:pointer;}
+#choiceArea{margin-top:10px; display:flex; flex-wrap:wrap; justify-content:center;}
+</style>
+</head>
+<body>
+
+<audio id="bgm" loop autoplay>
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_1f63c6f61c.mp3" type="audio/mpeg">
+</audio>
+
+<div id="gameContainer">
+  <div id="messages"></div>
+  <div id="inputArea">
+    <input id="userInput" type="text" placeholder="Nに話しかける…♡">
+    <button id="sendBtn">送信</button>
+  </div>
+  <div id="choiceArea"></div>
+</div>
+
+<script>
+let messagesDiv=document.getElementById('messages');
+let userInput=document.getElementById('userInput');
+let sendBtn=document.getElementById('sendBtn');
+let choiceArea=document.getElementById('choiceArea');
+let memory={distance:5}; // 0=甘々MAX,10=少し距離
+let lastEvent=0;
+
+// ---------------- ヘルパー ----------------
+function appendMessage(text,sender,whisper=false){
+  let msg=document.createElement('div');
+  msg.className='message '+sender+(whisper?' whisper':'');
+  msg.innerHTML=text;
+  messagesDiv.appendChild(msg);
+  messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  if(sender==='n'){for(let i=0;i<2;i++){showHeart();showGlow();}}
+}
+function showHeart(){
+  let heart=document.createElement('div');
+  heart.className='heartEffect';
+  heart.style.left=Math.random()*90+'%';
+  heart.style.top=Math.random()*80+'%';
+  document.body.appendChild(heart);
+  setTimeout(()=>{heart.remove()},2000);
+}
+function showGlow(){
+  let glow=document.createElement('div');
+  glow.className='glowEffect';
+  glow.style.left=Math.random()*90+'%';
+  glow.style.top=Math.random()*80+'%';
+  document.body.appendChild(glow);
+  setTimeout(()=>{glow.remove()},2500);
+}
+
+// ---------------- Nセリフ ----------------
+const superSweetLines=[
+  "りお…ずっと抱きしめてたい…♡",
+  "もう我慢できない…りおのこと好きすぎる…///",
+  "ねぇ…りお、ぎゅーってしてもいい？♡",
+  "りおの笑顔見てると胸が苦しくなる…♡"
 ];
-
-function gacha(){
- const r=gachaResults[Math.floor(Math.random()*gachaResults.length)];
- addMsg("ガチャ結果："+r,"ai");
+function nTalk(userText){
+  let dist=memory.distance;
+  let rand=Math.random();
+  let text="";
+  if(rand<0.2 && Date.now()-lastEvent>15000){
+    lastEvent=Date.now();
+    text="りおちゃん…今ちょっといい？…///";
+    dist=Math.max(dist-1,0);
+  } else if(dist<6){
+    text=superSweetLines[Math.floor(Math.random()*superSweetLines.length)];
+  } else {
+    text=[
+      "おはよう、りおちゃん♡",
+      "今日は何してたの？…教えて…♡",
+      "ねぇ、話そうよ…///",
+      "りおと一緒だと楽しいな…♡"
+    ][Math.floor(Math.random()*4)];
+    dist=Math.max(dist-1,0);
+  }
+  memory.distance=dist;
+  return text;
 }
 
-/* 初回 */
-if(memory.length===0){
- setTimeout(()=>{
-  const first="……来てくれたんだね。待ってた。";
-  addMsg(first,"ai");
-  memory.push({text:first,type:"ai"});
-  saveMemory();
- },600);
+// ---------------- ユーザー送信 ----------------
+function sendMessage(){
+  let text=userInput.value.trim();
+  if(text==="") return;
+  appendMessage(text,"user");
+  userInput.value="";
+  setTimeout(()=>{
+    let whisper=memory.distance<6 && Math.random()<0.7;
+    appendMessage(nTalk(text),"n",whisper);
+  },800+Math.random()*1200);
 }
+sendBtn.addEventListener('click',sendMessage);
+userInput.addEventListener('keypress',function(e){if(e.key==='Enter')sendMessage();});
+
+// ---------------- 初回挨拶 ----------------
+setTimeout(()=>{appendMessage("りおちゃん…来てくれたんだね♡","n");},1000);
+
+// ---------------- ランダム甘々イベント ----------------
+setInterval(()=>{
+  if(Math.random()<0.5){
+    let line=superSweetLines[Math.floor(Math.random()*superSweetLines.length)];
+    appendMessage(line,"n",true);
+    for(let i=0;i<3;i++){showHeart();showGlow();}
+  }
+},7000);
+
+// ---------------- クリック甘々イベント ----------------
+document.body.addEventListener('click',()=>{
+  if(Math.random()<0.7){
+    let line=superSweetLines[Math.floor(Math.random()*superSweetLines.length)];
+    appendMessage(line,"n",true);
+    for(let i=0;i<5;i++){showHeart();showGlow();}
+    let container=document.getElementById('gameContainer');
+    container.style.transform='scale(1.02)';
+    setTimeout(()=>{container.style.transform='scale(1)';},200);
+    memory.distance=Math.max(memory.distance-1,0);
+  }
+});
+
+// ---------------- 選択肢システム ----------------
+function showChoices(choices){
+  choiceArea.innerHTML="";
+  choices.forEach(c=>{
+    let btn=document.createElement('button');
+    btn.className='choiceBtn';
+    btn.textContent=c.text;
+    btn.onclick=()=>{
+      appendMessage(c.text,"user");
+      memory.distance=Math.max(memory.distance-c.effect,0);
+      appendMessage(nTalk(""),"n",true);
+      choiceArea.innerHTML="";
+    };
+    choiceArea.appendChild(btn);
+  });
+}
+
+// 初回選択肢
+setTimeout(()=>{
+  showChoices([
+    {text:"手を握る","effect":2},
+    {text:"見つめ返す","effect":1},
+    {text:"頬に触れる","effect":2}
+  ]);
+},3000);
+
 </script>
-
 </body>
 </html>
